@@ -1,0 +1,66 @@
+services:
+  backend:
+    container_name: backend-app
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      DB_HOST: postgres-db
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      REDIS_HOST: redis-server
+      REDIS_PORT: 6379
+    depends_on:
+      - postgres-db
+      - redis-server
+    volumes:
+      - backend_data:/app
+    restart: on-failure
+
+  postgres-db:
+    container_name: postgres-db
+    build:
+      context: ./postgres
+      dockerfile: Dockerfile
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: on-failure
+
+  redis-server:
+    container_name: redis-server
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: on-failure
+
+  mailhog:
+    container_name: mailhog-server
+    build:
+      context: ./mailhog
+      dockerfile: Dockerfile
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # Web UI
+    restart: on-failure
+
+volumes:
+  backend_data:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
